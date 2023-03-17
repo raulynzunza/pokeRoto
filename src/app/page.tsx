@@ -1,91 +1,78 @@
+'use client'
+import { ChangeEvent, useState } from "react"
 import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from './page.module.css'
+import fetching from "./hooks/useFetch"
 
-const inter = Inter({ subsets: ['latin'] })
 
-export default function Home() {
+interface Pokemon {
+  name: string,
+  url: string
+}
+
+interface Event {
+  value: string
+}
+
+export const Home = () => {
+
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [pokemon, setPokemon] = useState({
+    name: '',
+    img: ''
+  });
+
+  const onInputChange = ({ target }: ChangeEvent<Event>) => {
+    setInputValue(target.value)    
+  }
+
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (inputValue.trim().length <= 1) return
+
+    fetching()
+    setIsLoading(false)
+
+    setInputValue('')
+  }
+
+  const fetching = async () => {
+    await fetch(`https://pokeapi.co/api/v2/pokemon/${inputValue}`)
+            .then(resp => resp.json())
+            .then(pokemon => {
+              setPokemon({
+                name: pokemon.name,
+                img: pokemon.sprites.front_default
+              })
+            })            
+      
+  }
+
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <>    
+      <form onSubmit={onSubmit}>
+        <input
+          type="text"          
+          value={inputValue}
+          onChange={onInputChange}
         />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
+      </form>
 
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+      {
+        isLoading === true
+        ?
+          <div>Cargando...</div>
+        :
+          <Image 
+            src={pokemon.img} 
+            alt={pokemon.name} 
+            width={500} 
+            height={500}
+          />
+      }
+    
+    </>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
   )
 }
